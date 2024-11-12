@@ -8,7 +8,6 @@ symptoms = [
     "물집이 생겼어요", "따가워요", "붉어졌어요", "시큰거려요", "아파요", "쓰려요", "얼얼해요", "감각이 둔해요"
 ]
 
-# 제외할 증상 목록
 exclude_symptoms = {
     "목": ["무거워요", "저려요", "쑤셔요", "딱딱해졌어요", "얼얼해요", "감각이 둔해요"],
     "손": ["열나요", "무거워요", "쑤셔요"],
@@ -32,31 +31,30 @@ exclusive_symptoms = {
     "머리": ["두통이 있어요", "어지러워요", "지끈거려요"]
 }
 
-
 # 상태 초기화 함수
 def initialize_state():
     return {
         "step": "ask_start",
         "body_part": None,
         "symptoms": [],
-        "chat_history": []
+        "chat_history": [],
+        "placeholder": "부위를 입력해주세요."
     }
 
-
-# 대화 함수
 def conversation(input_text, state):
-    body_parts = ["목", "손", "팔", "다리", "어깨", "허리", "머리", "발", "손목", "발목", "무릎", "가슴", "배"]
-
+    # "처음" 입력 시 상태 초기화
     if input_text.lower() == "처음":
-        state = initialize_state()  # '처음'을 입력하면 상태를 초기화
-        response = f"안녕하세요. 어디가 아프신가요? 다음 부위 중 선택하여 적어주세요 : 목, 손, 팔, 다리, 어깨, 허리, 머리, 발, 손목, 발목, 무릎, 가슴, 배"
-        state["chat_history"].append(("처음", response))
+        state = initialize_state()
+        body_parts = ["목", "손", "팔", "다리", "어깨", "허리", "머리", "발", "손목", "발목", "무릎", "가슴", "배"]
+        response = f"안녕하세요. 어디가 아프신가요? 다음 부위 중 선택하여 적어주세요 : {', '.join(body_parts)} 등"
         state["step"] = "ask_body_part"
+        state["chat_history"].append((input_text, response))
         return state["chat_history"], state, gr.update(placeholder="부위를 입력해주세요.", value="")
 
     if state["step"] == "ask_start":
         if input_text.lower() == "시작":
-            response = f"안녕하세요. 어디가 아프신가요? 다음 부위 중 선택하여 적어주세요 : {', '.join(body_parts)}"
+            body_parts = ["목", "손", "팔", "다리", "어깨", "허리", "머리", "발", "손목", "발목", "무릎", "가슴", "배"]
+            response = f"안녕하세요. 어디가 아프신가요? 다음 부위 중 선택하여 적어주세요 : {', '.join(body_parts)} 등"
             state["step"] = "ask_body_part"
             state["chat_history"].append(("시작", response))
             return state["chat_history"], state, gr.update(placeholder="부위를 입력해주세요.", value="")
@@ -66,12 +64,6 @@ def conversation(input_text, state):
         return state["chat_history"], state, gr.update(placeholder="'시작'을 입력해주세요.", value="")
 
     elif state["step"] == "ask_body_part":
-        # 사용자가 입력한 부위가 유효한지 확인
-        if input_text not in body_parts:
-            response = "'잘 이해하지 못했습니다. 다시 입력해주세요.'"
-            state["chat_history"].append((input_text, response))
-            return state["chat_history"], state, gr.update(placeholder="올바른 부위를 입력해주세요.", value="")
-
         state["body_part"] = input_text
         state["step"] = "ask_symptoms"
 
@@ -81,7 +73,7 @@ def conversation(input_text, state):
         ]
         filtered_symptoms += exclusive_symptoms.get(input_text, [])
 
-        response = f"{input_text} 부위가 선택되었습니다. 다음 증상 중 선택해주세요 : {', '.join(filtered_symptoms)}"
+        response = f"{input_text} 부위가 선택되었습니다. 다음 증상 중 선택해주세요 : {', '.join(filtered_symptoms)} 등"
         state["chat_history"].append((input_text, response))
         return state["chat_history"], state, gr.update(placeholder="증상을 입력해주세요.", value="")
 
@@ -89,14 +81,10 @@ def conversation(input_text, state):
         if input_text.lower() in ["끝", "완료"]:
             sentence = build_sentences(state["body_part"], state["symptoms"])
             state["step"] = "get_recommendation"
+            state["placeholder"] = "약 추천 중"
             response = f"선택한 증상 : {sentence}. 이에 대한 약을 추천하겠습니다."
             state["chat_history"].append((input_text, response))
-            return state["chat_history"], state, gr.update(placeholder="어느 부위가 아프신가요?", value="")
-
-        if input_text not in symptoms:
-            response = "'잘 이해하지 못했습니다. 다시 입력해주세요.'"
-            state["chat_history"].append((input_text, response))
-            return state["chat_history"], state, gr.update(placeholder="올바른 증상을 입력해주세요.", value="")
+            return state["chat_history"], state, gr.update(placeholder="약 추천 중", value="")
 
         state["symptoms"].append(input_text)
         response = f"'{input_text}' 증상을 추가했습니다. 더 추가할 증상이 있나요? 완료하려면 '끝'이라고 입력하세요."
@@ -104,19 +92,16 @@ def conversation(input_text, state):
         return state["chat_history"], state, gr.update(placeholder="증상을 입력해주세요.", value="")
 
     elif state["step"] == "get_recommendation":
-        sentence = build_sentences(state["body_part"], state["symptoms"])
-        recommendation = get_recommendation(sentence)
+        recommendation = f"추천 약은 '{state['body_part']}의 증상에 맞는 약 3가지'입니다."
         response = f"추천 약 : {recommendation}"
         state["step"] = "completed"
         state["chat_history"].append((input_text, response))
-        return state["chat_history"], state, gr.update(placeholder="어느 부위가 아프신가요?", value="")
+        return state["chat_history"], state, gr.update(placeholder="약 추천 중", value="")
 
     response = "잘 이해하지 못했습니다. 다시 입력해주세요."
     state["chat_history"].append((input_text, response))
     return state["chat_history"], state, gr.update(placeholder="어느 부위가 아프신가요?", value="")
 
-
-# 증상 문장 생성 함수
 def build_sentences(body_part, selected_symptoms):
     if not selected_symptoms:
         return "증상을 선택해주세요."
@@ -124,27 +109,24 @@ def build_sentences(body_part, selected_symptoms):
     sentences = []
     symptoms_with_location_particle = [
         "염증이 생겼어요", "통증이 있어요", "열나요", "멍이 생겼어요", "열감이 있어요", "물집이 생겼어요",
-        "이물감이 있어요", "부어있어요", "빨갛게 부어 있어요", "쑤셔요", "아파요"
+        "이물감이 느껴져요", "두통이 있어요", "힘이 없어요", "발진이 생겨요"
     ]
     for symptom in selected_symptoms:
-        if symptom in symptoms_with_location_particle:
-            sentences.append(f"{body_part}에 {symptom}")
-        else:
-            sentences.append(f"{body_part}에 {symptom}")
+        particle = "에" if symptom in symptoms_with_location_particle else ("이" if (ord(body_part[-1]) - 44032) % 28 != 0 else "가")
+        sentences.append(f"{body_part}{particle} {symptom}")
 
-    return ", ".join(sentences)
+    return " 그리고 ".join(sentences)
 
-
-# 약 추천 함수 (임시)
 def get_recommendation(sentence):
-    return "약을 추천합니다."
+    return f"'{sentence}'에 맞는 약 3가지를 추천합니다."
 
-
-# Gradio 인터페이스 설정
+# Gradio 인터페이스 구성
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(height=700)
-    message = gr.Textbox(placeholder="'시작'을 입력하세요.", label="입력 메시지")
     state = gr.State(initialize_state())
-    message.submit(conversation, [message, state], [chatbot, state, message])
+    user_input = gr.Textbox(label="사용자 입력", placeholder="'시작'을 입력해주세요.")
 
-demo.launch(debug=True)
+    user_input.submit(conversation, inputs=[user_input, state], outputs=[chatbot, state, user_input])
+
+if __name__ == "__main__":
+    demo.launch()
