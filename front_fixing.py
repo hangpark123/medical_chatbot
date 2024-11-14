@@ -19,7 +19,6 @@ def extract_nouns_and_verbs(text):
     verbs = [word for word, tag in pos_tags if tag.startswith('V')]
     return nouns, verbs
 
-
 # 증상 키워드 매핑
 symptom_normalization_map = {
     "아픈 것 같아요": "아파요",
@@ -60,7 +59,6 @@ exclusive_symptoms = {
 
 body_parts = ["목", "손", "팔", "다리", "어깨", "허리", "머리", "발", "손목", "발목", "무릎", "가슴", "배"]
 
-
 def get_available_symptoms(body_part):
     if body_part not in body_parts:
         return []
@@ -71,77 +69,73 @@ def get_available_symptoms(body_part):
 
     return list(common_symptoms - excluded) + list(exclusive)
 
-
 def initialize_state():
-    # 채팅 기록을 초기화하지 않도록 수정
-    return {
-        "step": "start",
+    state = {
+        "step": "body_part",
         "body_part": None,
         "symptoms": [],
+        "chat_history": [],
         "symptom_count": 0
     }
 
+    # 초기 메시지 설정
+    initial_message = "안녕하세요. 어디가 아프신가요?"
+
+    # 초기 메시지를 대화 내역에 추가
+    state["chat_history"].append((None, initial_message))
+
+    return state
+
 def normalize_symptom(text):
-    # 형태소 분석으로 동사 또는 형용사를 추출
     _, verbs = extract_nouns_and_verbs(text)
     normalized_symptoms = []
     for verb in verbs:
-        # 추출된 단어가 정규화 맵에 있는지 확인 후, 매핑된 증상으로 변환
         if verb in symptom_normalization_map:
             normalized_symptoms.append(symptom_normalization_map[verb])
         else:
-            normalized_symptoms.append(verb)  # 매핑이 없으면 원래 형태로 사용
+            normalized_symptoms.append(verb)
     return normalized_symptoms
-
 
 def conversation(message, state):
     if state is None:
-        # 새로운 상태가 없는 경우에만 새로운 대화 기록을 초기화
         state = initialize_state()
-        state["chat_history"] = []
 
-    chat_history = state.get("chat_history", [])
+    chat_history = state["chat_history"]
     response = ""
 
-    # 대화 시작 단계
-    if state["step"] == "start":
-        if message.strip().lower() == "시작":
-            response = "안녕하세요. 어디가 아프신가요? 다음 부위 중 선택하여 적어주세요: 목, 손, 팔, 다리, 어깨, 허리, 머리, 발, 손목, 발목, 무릎, 가슴, 배"
-            state["step"] = "body_part"
-        else:
-            response = "'시작'을 입력해주세요."
+    # "처음"을 입력하면 초기 메시지로 돌아가지만, 대화 내역은 유지
+    if message.strip().lower() == "처음":
+        state["step"] = "body_part"
+        response = "안녕하세요. 어디가 아프신가요?"
+        chat_history.append((None, response))
+        return response, state, chat_history
 
     # 부위 입력 단계
-    elif state["step"] == "body_part":
+    if state["step"] == "body_part":
         nouns, _ = extract_nouns_and_verbs(message)
         if nouns and nouns[0] in body_parts:
             state["body_part"] = nouns[0]
             available_symptoms = get_available_symptoms(nouns[0])
-            response = f"'{nouns[0]}' 부위가 선택되었습니다. 다음 증상 중 선택해주세요:\n{', '.join(available_symptoms)}"
+            response = f"'{nouns[0]}' 부위가 아프시군요. 증상에 대해 설명해주세요."
             state["step"] = "symptoms"
         else:
-            response = f"올바른 부위를 선택해주세요."
-#######
+            response = "올바른 부위를 입력해주세요."
+
     # 증상 입력 단계
     elif state["step"] == "symptoms":
-        # normalized_symptoms = normalize_symptom(input_text)
-
         if message.strip().lower() == "끝":
             if state["symptoms"]:
                 symptoms_with_body_part = [f"{state['body_part']}가 {symptom}" for symptom in state["symptoms"]]
-                # response = f"입력하신 증상들: {', '.join(symptoms_with_body_part)}\n진단 결과를 분석중입니다..."
-                response = f"입력하신 증상들: '{message.strip()}'\n진단 결과를 분석중입니다..."
+                response = f"입력하신 증상들: {', '.join(symptoms_with_body_part)}\n진단 결과를 분석중입니다..."
                 chat_history.append((message, response))
 
-                # 진단 결과를 자동으로 표시`
                 diseases = ["질병1", "질병2", "질병3"]
                 medicines = ["약물1", "약물2", "약물3"]
                 diagnosis_response = f"추천 진단 결과 (상위 3개):\n{', '.join(diseases)}\n\n추천 약물:\n" + "\n".join(
                     [f"* {medicine}" for medicine in medicines])
                 chat_history.append((None, diagnosis_response))
 
-                # 재시작 안내 메시지 추가
-                restart_message = "다시 하기를 원하시면 '시작'을 입력해주세요."
+                restart_message = "다시 하기를 원하시면 '처음'을 입력해주세요."
                 chat_history.append((None, restart_message))
 
                 state["step"] = "complete"
@@ -161,30 +155,15 @@ def conversation(message, state):
                     normalized_symptoms = normalize_symptom(message.strip())
                     if normalized_symptoms:
                         state["symptoms"].extend(normalized_symptoms)
-                        # .join(normalized_symptoms)
                         response = f"{message.strip()} 증상이 추가되었습니다. 더 추가할 증상이 있나요? 완료하려면 '끝'이라고 입력하세요."
-                    elif message.strip().lower() == "끝":
-                        state["step"] = "processing"
-                        response = f"{state['body_part']} 부위에서 {', '.join(state['symptoms'])} 증상을 분석하여 질병명을 확인중입니다..."
                     else:
                         response = "올바른 증상을 입력하거나, '끝'을 입력해주세요."
 
-
-    # 완료 상태에서의 추가 입력 처리
     elif state["step"] == "complete":
-        if message.strip().lower() == "시작":
-            state = initialize_state()
-            response = f"안녕하세요. 어디가 아프신가요? 다음 부위 중 선택하여 적어주세요: 목, 손, 팔, 다리, 어깨, 허리, 머리, 발, 손목, 발목, 무릎, 가슴, 배"
-            state["step"] = "body_part"
-        else:
-            response = "다시 하기를 원하시면 '시작'을 입력해주세요."
+        response = "다시 하기를 원하시면 '처음'을 입력해주세요."
 
-#    chat_history.append((message, response))
-#    return response, state, chat_history
     chat_history.append((message, response))
-    state["chat_history"] = chat_history  # 업데이트된 기록을 상태에 저장
     return response, state, chat_history
-
 
 # Gradio 인터페이스 생성
 with gr.Blocks() as demo:
@@ -202,11 +181,11 @@ with gr.Blocks() as demo:
     )
     state = gr.State(initialize_state())
 
+    demo.load(lambda: initialize_state()["chat_history"], outputs=[chatbot])
 
     def respond(message, state):
         response, new_state, chat_history = conversation(message, state)
         return "", new_state, chat_history
-
 
     msg.submit(
         respond,
