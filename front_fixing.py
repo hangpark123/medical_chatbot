@@ -126,7 +126,11 @@ def conversation(message, state):
         if message.strip().lower() == "끝":
             if state["symptoms"]:
                 symptoms_with_body_part = [f"{state['body_part']}가 {symptom}" for symptom in state["symptoms"]]
-                response = f"입력하신 증상들: {', '.join(symptoms_with_body_part)}\n진단 결과를 분석중입니다..."
+                # response = f"입력하신 증상들: '{message.strip()}'\n진단 결과를 분석중입니다..."
+                # response = f"입력하신 증상들: {', '.join(symptoms_with_body_part)}\n진단 결과를 분석중입니다..."
+                sentence = build_sentences(state["body_part"], state["symptoms"])
+                response = f"선택한 증상 : {sentence}. 이에 대한 약을 추천하겠습니다."
+
                 chat_history.append((message, response))
 
                 diseases = ["질병1", "질병2", "질병3"]
@@ -165,13 +169,30 @@ def conversation(message, state):
     chat_history.append((message, response))
     return response, state, chat_history
 
+
+def build_sentences(body_part, selected_symptoms):
+    if not selected_symptoms:
+        return "증상을 선택해주세요."
+
+    sentences = []
+    symptoms_with_location_particle = [
+        "염증이 생겼어요", "통증이 있어요", "열나요", "멍이 생겼어요", "열감이 있어요", "물집이 생겼어요",
+        "이물감이 느껴져요", "두통이 있어요", "힘이 없어요", "발진이 생겨요"
+    ]
+    for symptom in selected_symptoms:
+        particle = "에" if symptom in symptoms_with_location_particle else ("이" if (ord(body_part[-1]) - 44032) % 28 != 0 else "가")
+        sentences.append(f"{body_part}{particle} {symptom}")
+
+    return " 그리고 ".join(sentences)
+
+
 # Gradio 인터페이스 생성
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(
         [],
         elem_id="chatbot",
         bubble_full_width=False,
-        avatar_images=("user.png", "assistant.png"),
+        avatar_images=("user.png", "assistant.png"),            # 챗봇 이미지 바꾸기
         height=400
     )
     msg = gr.Textbox(
