@@ -83,7 +83,7 @@ def initialize_state():
     }
 
     # 초기 메시지 설정
-    initial_message = "안녕하세요. 어디가 아프신가요?"
+    initial_message = "안녕하세요. 무엇이 불편하신가요? 아프신 부위를 말씀해 주세요."
 
     state["chat_history"].append((None, initial_message))
 
@@ -111,7 +111,7 @@ def conversation(message, state):
     # "처음"을 입력하면 초기 메시지로 돌아가지만, 대화 내역은 유지
     if message.strip().lower() == "처음":
         state["step"] = "body_part"
-        response = "안녕하세요. 어디가 아프신가요?"
+        response = "안녕하세요. 무엇이 불편하신가요? 아프신 부위를 말씀해 주세요."
         chat_history.append((None, response))
         return response, state, chat_history
 
@@ -121,10 +121,10 @@ def conversation(message, state):
         if nouns and nouns[0] in body_parts:
             state["body_part"] = nouns[0]
             available_symptoms = get_available_symptoms(nouns[0])
-            response = f"'{nouns[0]}' 부위가 아프시군요. 증상에 대해 설명해주세요."
+            response = f"'{nouns[0]}' 부위가 불편하시군요. 불편하신 증상에 대해 자세히 말씀해 주세요."
             state["step"] = "symptoms"
         else:
-            response = "올바른 부위를 입력해주세요."
+            response = "입력하신 부위를 다시 한번 확인해 주세요. 정확한 부위를 입력해 주시면 도움을 드리겠습니다."
 
     # 증상 입력 단계
     elif state["step"] == "symptoms":
@@ -133,8 +133,9 @@ def conversation(message, state):
                 symptoms_with_body_part = [f"{state['body_part']}가 {symptom}" for symptom in state["symptoms"]]
                 # response = f"입력하신 증상들: '{message.strip()}'\n진단 결과를 분석중입니다..."
                 # response = f"입력하신 증상들: {', '.join(symptoms_with_body_part)}\n진단 결과를 분석중입니다..."
+                # "수정 중"
                 sentence = build_sentences(state["body_part"], state["symptoms"])
-                response = f"선택한 증상 : {sentence}. 이에 대한 약을 추천하겠습니다."
+                response = f"'{sentence}'에 적합한 약을 추천해 드리겠습니다."
 
                 chat_history.append((message, response))
 
@@ -144,32 +145,32 @@ def conversation(message, state):
                     [f"* {medicine}" for medicine in medicines])
                 chat_history.append((None, diagnosis_response))
 
-                restart_message = "다시 하기를 원하시면 '처음'을 입력해주세요."
+                restart_message = "다시 시작하시려면 '처음'이라고 입력해 주세요."
                 chat_history.append((None, restart_message))
 
                 state["step"] = "complete"
                 return restart_message, state, chat_history
             else:
-                response = "최소 한 개의 증상을 입력해주세요."
+                response = "증상을 최소 한 가지 이상 입력해 주세요. 불편하신 증상을 말씀해 주시면 도움을 드리겠습니다."
         else:
             if state["symptom_count"] >= 3:
-                response = "증상은 최대 3개까지만 입력 가능합니다."
+                response = "증상은 최대 3개까지 입력 가능합니다. 가장 불편하신 증상을 우선으로 말씀해 주세요."
             else:
                 available_symptoms = get_available_symptoms(state["body_part"])
                 if message.strip() in available_symptoms:
                     state["symptoms"].append(message.strip())
                     state["symptom_count"] += 1
-                    response = f"'{message.strip()}' 증상이 추가되었습니다. 더 추가할 증상이 있으면 입력하시고, 없으면 '끝'을 입력해주세요."
+                    response = f"'{message.strip()}' 증상을 추가하였습니다. 더 추가할 증상이 있으시면 입력해 주시고, 없으시면 '끝'이라고 입력해 주세요."
                 else:
                     normalized_symptoms = normalize_symptom(message.strip())
                     if normalized_symptoms:
                         state["symptoms"].extend(normalized_symptoms)
-                        response = f"{message.strip()} 증상이 추가되었습니다. 더 추가할 증상이 있나요? 완료하려면 '끝'이라고 입력하세요."
+                        response = f"'{message.strip()}' 증상을 추가하였습니다. 더 추가할 증상이 있으시면 입력해 주시고, 없으시면 '끝'이라고 입력해 주세요."
                     else:
-                        response = "올바른 증상을 입력하거나, '끝'을 입력해주세요."
+                        response = "올바른 증상을 입력해 주시거나, 증상 입력을 마치셨다면 '끝'을 입력해 주세요."
 
     elif state["step"] == "complete":
-        response = "다시 하기를 원하시면 '처음'을 입력해주세요."
+        response = "다시 시작하시려면 '처음'이라고 입력해 주세요."
 
     chat_history.append((message, response))
     return response, state, chat_history
@@ -177,7 +178,7 @@ def conversation(message, state):
 
 def build_sentences(body_part, selected_symptoms):
     if not selected_symptoms:
-        return "증상을 선택해주세요."
+        return "증상을 입력해 주세요."
 
     sentences = []
     symptoms_with_location_particle = [
@@ -203,7 +204,7 @@ with gr.Blocks() as demo:
         height=700
     )
     msg = gr.Textbox(
-        placeholder="메시지를 입력하세요...",
+        placeholder="메시지를 입력해 주세요.",
         show_label=False,
         lines=1
     )
