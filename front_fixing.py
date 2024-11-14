@@ -1,6 +1,7 @@
 import gradio as gr
 from konlpy.tag import Kkma
 
+
 kkma = Kkma()
 
 
@@ -18,6 +19,7 @@ def extract_nouns_and_verbs(text):
     nouns = [word for word, tag in pos_tags if tag.startswith('N')]
     verbs = [word for word, tag in pos_tags if tag.startswith('V')]
     return nouns, verbs
+
 
 # 증상 키워드 매핑
 symptom_normalization_map = {
@@ -59,6 +61,7 @@ exclusive_symptoms = {
 
 body_parts = ["목", "손", "팔", "다리", "어깨", "허리", "머리", "발", "손목", "발목", "무릎", "가슴", "배"]
 
+
 def get_available_symptoms(body_part):
     if body_part not in body_parts:
         return []
@@ -68,6 +71,7 @@ def get_available_symptoms(body_part):
     exclusive = set(exclusive_symptoms.get(body_part, []))
 
     return list(common_symptoms - excluded) + list(exclusive)
+
 
 def initialize_state():
     state = {
@@ -86,6 +90,7 @@ def initialize_state():
 
     return state
 
+
 def normalize_symptom(text):
     _, verbs = extract_nouns_and_verbs(text)
     normalized_symptoms = []
@@ -95,6 +100,7 @@ def normalize_symptom(text):
         else:
             normalized_symptoms.append(verb)
     return normalized_symptoms
+
 
 def conversation(message, state):
     if state is None:
