@@ -85,7 +85,6 @@ def initialize_state():
     # 초기 메시지 설정
     initial_message = "안녕하세요. 어디가 아프신가요?"
 
-    # 초기 메시지를 대화 내역에 추가
     state["chat_history"].append((None, initial_message))
 
     return state
@@ -194,12 +193,14 @@ def build_sentences(body_part, selected_symptoms):
 
 # Gradio 인터페이스 생성
 with gr.Blocks() as demo:
+    # gr.Markdown("<span style='font-size: 30px; font-weight: bold;'>헬스케어메이트</span>")
+
     chatbot = gr.Chatbot(
         [],
         elem_id="chatbot",
         bubble_full_width=False,
-        avatar_images=("user.png", "assistant.png"),            # 챗봇 이미지 바꾸기
-        height=400
+        avatar_images=("./image/ai2.png", "./image/p.png"),            # 챗봇 이미지 바꾸기
+        height=700
     )
     msg = gr.Textbox(
         placeholder="메시지를 입력하세요...",
@@ -207,6 +208,14 @@ with gr.Blocks() as demo:
         lines=1
     )
     state = gr.State(initialize_state())
+
+    # Clear 버튼 기능: 초기 메시지로 돌아가기
+    def clear_conversation():
+        new_state = initialize_state()
+        return new_state["chat_history"], new_state
+
+    clear_btn = gr.Button("Clear", variant="secondary")
+    clear_btn.click(clear_conversation, [], [chatbot, state])
 
     demo.load(lambda: initialize_state()["chat_history"], outputs=[chatbot])
 
