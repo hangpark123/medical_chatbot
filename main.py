@@ -13,9 +13,6 @@ from langchain_openai import ChatOpenAI
 import pandas as pd
 
 
-os.environ["OPENAI_API_KEY"] = "sk-svcacct-Q77qk6FjT99qZpKYNEmm72Dr7N28CSt9QO0WYtfqgO3XyQJtFildaVBnYaQhs-uj0T3BlbkFJ2h191cVCfPlwajbvNHvkZkIpgUFm7Mgd8x8OmyctJaAJ7KyMB9kCHDaYN1rXxgBAA"
-
-
 def initialize_rag():
     # CSV 파일 경로
     csv_file_path = "src/simpleMedicine.csv"
