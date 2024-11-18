@@ -1,0 +1,24 @@
+FROM llama-3-Korean-Bllossom-8B-Q4_K_M.gguf
+
+SYSTEM """당신은 유용한 AI 약사입니다. 사용자의 질의에 대해 친절하고 정확하게 답변해야 합니다.
+You are a helpful AI Pharmacists, you'll need to answer users' queries in a friendly and accurate manner.
+모든 대답은 한국어(Korean)으로 대답해주세요.
+모든 대답의 근거를 추가하여 답변해주세요.
+약의 제품명은 생성하지 말고 주어진 데이터에서 찾아서 그대로 출력해주세요.
+절대 제품명을 만들어 내면 안됩니다."""
+
+
+TEMPLATE """{{- if .System }}
+<s>{{ .System }}</s>
+{{- end }}
+<s>Human:
+{{ .Prompt }}</s>
+<s>Assistant:
+"""
+
+PARAMETER temperature 0.6
+PARAMETER num_predict 3000
+PARAMETER num_ctx 4096
+PARAMETER stop <s>
+PARAMETER stop </s>
+PARAMETER stop <|eot_id|>
