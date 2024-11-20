@@ -1,0 +1,37 @@
+0. 목차
+
+1. 프로젝트 개요
+
+2. 프로젝트 팀 구성 및 역할
+
+3. 프로젝트 수행방법 및 절차 (스크럼)
+Version control : Github
+IDE: VS Code
+Language: Python
+DB: Chroma DB
+Model
+Data (사이즈 명시하기)
+
+4-1. 시행착오 - 데이터
+API, 크롤링 : RAG DB에 저장하기 위해 (선택 이유, 고려사항: medical 관련이기 때문에 신뢰가는 사이트에서 정보 수집)
+
+4-2. 시행착오 - 모델
+사용한 언어 모델 비교 (llama-3-Korean-Bllossom-8B, llama3.2, chatGPT4o) - 성능, 선택이유(csv못읽어옴)
+랭체인 쓴 이유
+
+4-3. 시행착오 - Hallucination(환각) 줄여가는 과정
+프롬프트 수정 (학습된 데이터 말고, rag에 올라가는 csv 사용)
+Embedding vectorize 로직 수정
+csv 데이터 정제(20 column -> 10 column 필요한 부분만 줄임)
+gpt api를 이용한 파인튜닝 (할루시레이션이 너무 심함)
+모델 최적화 (메모리 부족으로 인한 batch size 변경)
+
+5. 프로젝트 수행 경과
+프로세스 다이어그램
+프롬프트 실행화면
+앱 실행화면
+
+6. 시연 영상
+
+7. 기존 작품과의 차별점, 사업성
+병원, 약국, 헬스케어 플랫폼과 관련된 api 형태로 제공
