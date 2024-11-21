@@ -32,7 +32,6 @@ AI 기반 의약품 추천 시스템은 사용자의 증상을 입력받아 관�
 │   ├── bot.png                  # 봇 아바타 이미지
 ├── chroma_db/                   # Chroma 벡터 데이터 저장소
 ├── main.py                      # 메인 Python 코드
-├── requirements.txt             # Python 의존성 파일
 └── README.md                    # 프로젝트 설명 파일
 ```
 
@@ -93,20 +92,3 @@ LLM(Ollama)을 통해 추천 결과를 생성하며, 약품의 효능, 주의사
 - 지역 약국 정보와의 연동
 - 심각한 증상에 대한 응급 경고 시스템
 
----
-
-## 🤝 **기여 방법**
-1. 이 저장소를 포크합니다.
-2. 새로운 기능이나 버그를 수정한 후 PR(Pull Request)을 생성합니다.
-3. 프로젝트 발전에 기여해주셔서 감사합니다! 😊
-
----
-
-## 📜 **라이선스**
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
-
----
-
-## 📧 **문의**
-- **팀명**: AI Healthcare Project Team
-- **이메일**: support@aihealthcare.com
