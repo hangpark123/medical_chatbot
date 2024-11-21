@@ -45,20 +45,15 @@ git clone https://github.com/<your-repo-name>/medicine-recommendation.git
 cd medicine-recommendation
 ```
 
-### 2. **필요한 라이브러리 설치**
-```bash
-pip install -r requirements.txt
-```
-
-### 3. **Chroma 데이터베이스 초기화**
+### 2. **Chroma 데이터베이스 초기화**
 `medicine_update.csv` 파일을 사용하여 Chroma 데이터베이스를 생성합니다. 코드는 실행 시 자동으로 데이터베이스를 생성합니다.
 
-### 4. **서버 실행**
+### 3. **서버 실행**
 ```bash
 python main.py
 ```
 
-### 5. **접속**
+### 4. **접속**
 로컬 서버에 접속:
 ```
 http://localhost:7860
