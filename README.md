@@ -32,6 +32,7 @@ AI 기반 의약품 추천 시스템은 사용자의 증상을 입력받아 관�
 │   ├── bot.png                  # 봇 아바타 이미지
 ├── chroma_db/                   # Chroma 벡터 데이터 저장소
 ├── main.py                      # 메인 Python 코드
+├── requirements.txt             # 프로젝트 패키지 목록
 └── README.md                    # 프로젝트 설명 파일
 ```
 
